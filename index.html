@@ -264,7 +264,7 @@
                 <div>
                     <div id="server-status-badge" class="status-badge">
                         <span class="status-dot"></span>
-                        <span id="server-status-text" class="status-text">Checking status...</span>
+                        <span id="server-status-text" class="status-text">Checking server...</span>
                     </div>
                 </div>
 
@@ -341,23 +341,25 @@
             document.getElementById('nav-' + pageId).classList.add('active');
         }
 
-        // --- Fetching Status from status.php backend file ---
-        async function checkServerStatus() {
+        // --- Live Direct IP Status Checker ---
+        const serverIp = "123.45.67.89";   // 🛠️ PUT YOUR IP HERE
+        const serverPort = "30120";       // 🛠️ PUT YOUR PORT HERE
+
+        async function updateFiveMStatus() {
             const badge = document.getElementById('server-status-badge');
             const textDisplay = document.getElementById('server-status-text');
 
             try {
-                // Fetching the internal separated php file processing script
-                const response = await fetch('status.php');
+                // Fetching data from your server's local endpoint
+                const response = await fetch(`http://${serverIp}:${serverPort}/dynamic.json`);
+
                 if (response.ok) {
                     const data = await response.json();
-                    
-                    if (data.online === true) {
-                        badge.className = "status-badge online";
-                        textDisplay.innerHTML = `ONLINE &nbsp;|&nbsp; ${data.clients}/${data.maxclients} Players`;
-                    } else {
-                        setOfflineState(badge, textDisplay);
-                    }
+                    const currentPlayers = data.clients;
+                    const maxPlayers = data.sv_maxclients;
+
+                    badge.className = "status-badge online";
+                    textDisplay.innerHTML = `ONLINE &nbsp;|&nbsp; ${currentPlayers}/${maxPlayers} Players`;
                 } else {
                     setOfflineState(badge, textDisplay);
                 }
@@ -371,10 +373,11 @@
             textElement.innerHTML = "SERVER OFFLINE";
         }
 
-        // Run checking operations immediately
-        checkServerStatus();
-        // Automatically check/refresh server status updates every 30 seconds
-        setInterval(checkServerStatus, 30000);
+        // Run immediately on page load
+        updateFiveMStatus();
+        
+        // Refresh server data automatically every 30 seconds
+        setInterval(updateFiveMStatus, 30000);
     </script>
 </body>
 </html>
