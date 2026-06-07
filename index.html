@@ -13,6 +13,11 @@
             --accent-glow: rgba(30, 112, 255, 0.4);
             --text-main: #ffffff;
             --text-muted: #94a3b8;
+            
+            /* Status Indicators */
+            --color-online: #2ecc71;
+            --color-offline: #e74c3c;
+            --color-loading: #f1c40f;
         }
 
         * {
@@ -118,11 +123,48 @@
         .hero p {
             font-size: 1.2rem;
             color: var(--text-muted);
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.5rem;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
         }
+
+        /* --- Server Status Card Badge --- */
+        .status-badge {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--color-loading);
+            box-shadow: 0 0 8px var(--color-loading);
+            display: inline-block;
+        }
+
+        /* Live state modifiers */
+        .status-badge.online .status-dot {
+            background-color: var(--color-online);
+            box-shadow: 0 0 10px var(--color-online);
+        }
+        .status-badge.offline .status-dot {
+            background-color: var(--color-offline);
+            box-shadow: 0 0 10px var(--color-offline);
+        }
+        .status-badge.online .status-text { color: #ffffff; }
+        .status-badge.offline .status-text { color: var(--text-muted); }
 
         /* --- Connect Button --- */
         .btn-connect {
@@ -204,7 +246,6 @@
 </head>
 <body>
 
-    <!-- Navigation -->
     <nav>
         <div class="logo">infinite<span>DOJ</span></div>
         <ul class="nav-links">
@@ -213,19 +254,24 @@
         </ul>
     </nav>
 
-    <!-- Main Content Area -->
     <main>
         
-        <!-- HOME PAGE -->
         <div id="home" class="page active">
             <div class="hero">
                 <h1>Welcome to <span>infiniteDOJ</span></h1>
                 <p>Experience next-level FiveM roleplay. Join a community built on fair play, immersive stories, and high-octane action.</p>
+                
+                <div>
+                    <div id="server-status-badge" class="status-badge">
+                        <span class="status-dot"></span>
+                        <span id="server-status-text" class="status-text">Checking status...</span>
+                    </div>
+                </div>
+
                 <a href="https://cfx.re/join/e6ezlrb" class="btn-connect" target="_blank">Connect Now</a>
             </div>
         </div>
 
-        <!-- RULES PAGE -->
         <div id="rules" class="page">
             <div class="rules-container">
                 <h2>Server Rules</h2>
@@ -277,27 +323,58 @@
 
     </main>
 
-    <!-- Footer -->
     <footer>
         &copy; 2026 infiniteDOJ. All rights reserved. Powered by FiveM.
     </footer>
 
-    <!-- Page Swapper Script -->
     <script>
+        // --- Page Swapper ---
         function switchPage(pageId) {
-            // Hide all pages
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
             });
-            // Remove active class from all nav links
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.classList.remove('active');
             });
 
-            // Show target page and highlight target nav link
             document.getElementById(pageId).classList.add('active');
             document.getElementById('nav-' + pageId).classList.add('active');
         }
+
+        // --- Fetching Status from status.php backend file ---
+        async function checkServerStatus() {
+            const badge = document.getElementById('server-status-badge');
+            const textDisplay = document.getElementById('server-status-text');
+
+            try {
+                // Fetching the internal separated php file processing script
+                const response = await fetch('status.php');
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.online === true) {
+                        badge.className = "status-badge online";
+                        textDisplay.innerHTML = `ONLINE &nbsp;|&nbsp; ${data.clients}/${data.maxclients} Players`;
+                    } else {
+                        setOfflineState(badge, textDisplay);
+                    }
+                } else {
+                    setOfflineState(badge, textDisplay);
+                }
+            } catch (error) {
+                setOfflineState(badge, textDisplay);
+            }
+        }
+
+        function setOfflineState(badgeElement, textElement) {
+            badgeElement.className = "status-badge offline";
+            textElement.innerHTML = "SERVER OFFLINE";
+        }
+
+        // Run checking operations immediately
+        checkServerStatus();
+        // Automatically check/refresh server status updates every 30 seconds
+        setInterval(checkServerStatus, 30000);
     </script>
 </body>
 </html>
