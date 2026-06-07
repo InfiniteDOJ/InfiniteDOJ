@@ -341,20 +341,24 @@
             document.getElementById('nav-' + pageId).classList.add('active');
         }
 
-        // --- Official Native FiveM API Checker ---
-        const cfxJoinId = "e6ezlrb"; // 🛠️ Configured with your server code
+        // --- Proxied FiveM API Checker ---
+        const cfxJoinId = "e6ezlrb"; // Your Server's Join ID
 
         async function updateFiveMStatus() {
             const badge = document.getElementById('server-status-badge');
             const textDisplay = document.getElementById('server-status-text');
 
             try {
-                const response = await fetch(`https://servers-frontend.fivem.net/api/servers/single/${cfxJoinId}`);
+                // Route the request via corsproxy.io to protect against browser blocks
+                const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${cfxJoinId}`;
+                const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+                
+                const response = await fetch(proxyUrl);
 
                 if (response.ok) {
                     const resData = await response.json();
                     
-                    // Pulling real-time parameters directly from Cfx database
+                    // Pull parameters directly out of the proxy query bundle
                     const currentPlayers = resData.Data.clients;
                     const maxPlayers = resData.Data.sv_maxclients;
 
