@@ -13,11 +13,6 @@
             --accent-glow: rgba(30, 112, 255, 0.4);
             --text-main: #ffffff;
             --text-muted: #94a3b8;
-            
-            /* Status Indicators */
-            --color-online: #2ecc71;
-            --color-offline: #e74c3c;
-            --color-loading: #f1c40f;
         }
 
         * {
@@ -123,48 +118,11 @@
         .hero p {
             font-size: 1.2rem;
             color: var(--text-muted);
-            margin-bottom: 1.5rem;
+            margin-bottom: 2.5rem;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
         }
-
-        /* --- Server Status Card Badge --- */
-        .status-badge {
-            background-color: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 1.2rem;
-            border-radius: 50px;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--color-loading);
-            box-shadow: 0 0 8px var(--color-loading);
-            display: inline-block;
-        }
-
-        /* Live state modifiers applied via JavaScript */
-        .status-badge.online .status-dot {
-            background-color: var(--color-online);
-            box-shadow: 0 0 10px var(--color-online);
-        }
-        .status-badge.offline .status-dot {
-            background-color: var(--color-offline);
-            box-shadow: 0 0 10px var(--color-offline);
-        }
-        .status-badge.online .status-text { color: #ffffff; }
-        .status-badge.offline .status-text { color: var(--text-muted); }
 
         /* --- Connect Button --- */
         .btn-connect {
@@ -251,6 +209,7 @@
         <ul class="nav-links">
             <li><a onclick="switchPage('home')" id="nav-home" class="active">Home</a></li>
             <li><a onclick="switchPage('rules')" id="nav-rules">Rules</a></li>
+            <li><a href="https://infinitedoj.github.io/botwebsite/">Discord Bot</a></li>
         </ul>
     </nav>
 
@@ -261,13 +220,6 @@
                 <h1>Welcome to <span>infiniteDOJ</span></h1>
                 <p>Experience next-level FiveM roleplay. Join a community built on fair play, immersive stories, and high-octane action.</p>
                 
-                <div>
-                    <div id="server-status-badge" class="status-badge">
-                        <span class="status-dot"></span>
-                        <span id="server-status-text" class="status-text">Checking server...</span>
-                    </div>
-                </div>
-
                 <a href="https://cfx.re/join/e6ezlrb" class="btn-connect" target="_blank">Connect Now</a>
             </div>
         </div>
@@ -334,54 +286,15 @@
                 page.classList.remove('active');
             });
             document.querySelectorAll('.nav-links a').forEach(link => {
-                link.classList.remove('active');
+                // Keep the structural highlight intact unless it's an outbound link
+                if(link.getAttribute('href') === null) {
+                    link.classList.remove('active');
+                }
             });
 
             document.getElementById(pageId).classList.add('active');
             document.getElementById('nav-' + pageId).classList.add('active');
         }
-
-        // --- Proxied FiveM API Checker ---
-        const cfxJoinId = "e6ezlrb"; // Your Server's Join ID
-
-        async function updateFiveMStatus() {
-            const badge = document.getElementById('server-status-badge');
-            const textDisplay = document.getElementById('server-status-text');
-
-            try {
-                // Route the request via corsproxy.io to protect against browser blocks
-                const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${cfxJoinId}`;
-                const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
-                
-                const response = await fetch(proxyUrl);
-
-                if (response.ok) {
-                    const resData = await response.json();
-                    
-                    // Pull parameters directly out of the proxy query bundle
-                    const currentPlayers = resData.Data.clients;
-                    const maxPlayers = resData.Data.sv_maxclients;
-
-                    badge.className = "status-badge online";
-                    textDisplay.innerHTML = `ONLINE &nbsp;|&nbsp; ${currentPlayers}/${maxPlayers} Players`;
-                } else {
-                    setOfflineState(badge, textDisplay);
-                }
-            } catch (error) {
-                setOfflineState(badge, textDisplay);
-            }
-        }
-
-        function setOfflineState(badgeElement, textElement) {
-            badgeElement.className = "status-badge offline";
-            textElement.innerHTML = "SERVER OFFLINE";
-        }
-
-        // Run immediately on page load
-        updateFiveMStatus();
-        
-        // Refresh server data automatically every 30 seconds
-        setInterval(updateFiveMStatus, 30000);
     </script>
 </body>
 </html>
